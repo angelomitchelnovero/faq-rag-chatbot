@@ -38,7 +38,7 @@ faq-rag-chatbot/
 
 - [x] Step 1: Project scaffolding
 - [x] Step 2: Backend skeleton (FastAPI health check + config)
-- [ ] Step 3: Document ingestion pipeline (PDF → chunks → embeddings → ChromaDB)
+- [x] Step 3: Document ingestion pipeline (PDF → chunks → embeddings → ChromaDB)
 - [ ] Step 4: RAG query endpoint (retrieve + Gemini answer generation)
 - [ ] Step 5: Auth system (JWT, admin/user roles)
 - [ ] Step 6: Admin interface (upload/manage documents)

@@ -6,8 +6,11 @@ pydantic==2.9.2
 pydantic-settings==2.5.2
 
 # --- RAG / Vector DB ---
+# Note: ChromaDB's default embedding function (all-MiniLM-L6-v2 via ONNX Runtime)
+# is used instead of sentence-transformers/PyTorch. Same embedding quality,
+# ~10x smaller install and much friendlier to free-tier hosting (Render/Railway).
 chromadb==0.5.15
-sentence-transformers==3.1.1
+onnxruntime==1.19.2
 
 # --- PDF parsing ---
 pypdf==4.3.1

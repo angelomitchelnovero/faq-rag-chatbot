@@ -12,7 +12,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import health
+from app.database import init_db
+from app.routers import health, documents
 
 app = FastAPI(
     title="FAQ RAG Chatbot API",
@@ -35,6 +36,7 @@ def on_startup():
     # Make sure the folders we depend on actually exist before anything tries to use them
     os.makedirs(settings.upload_dir, exist_ok=True)
     os.makedirs(settings.chroma_dir, exist_ok=True)
+    init_db()
 
 
 @app.get("/")
@@ -44,3 +46,4 @@ def read_root():
 
 # Routers
 app.include_router(health.router)
+app.include_router(documents.router)
