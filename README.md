@@ -34,13 +34,17 @@ faq-rag-chatbot/
 │   └── .env.example
 └── frontend/
     ├── app/
-    │   ├── login/           # Sign in / register page
-    │   ├── admin/            # Admin dashboard (protected)
-    │   └── layout.tsx         # Root layout, fonts, AuthProvider
+    │   ├── page.tsx           # Public chat UI (root route)
+    │   ├── login/               # Sign in / register page
+    │   ├── admin/                # Admin dashboard (protected)
+    │   └── layout.tsx             # Root layout, fonts, AuthProvider
     ├── lib/
-    │   ├── api.ts             # Backend API client
-    │   └── auth.tsx            # Auth context (login state, token storage)
+    │   ├── api.ts                 # Backend API client
+    │   └── auth.tsx                # Auth context (login state, token storage)
     ├── components/
+    │   ├── ChatMessage.tsx          # Chat bubble with source citations
+    │   ├── TypingIndicator.tsx       # "Assistant is typing" animation
+    │   └── StatusBadge.tsx            # Document status chip (admin)
     └── .env.local.example
 ```
 
@@ -52,7 +56,7 @@ faq-rag-chatbot/
 - [x] Step 4: RAG query endpoint (retrieve + Gemini answer generation)
 - [x] Step 5: Auth system (JWT, admin/user roles)
 - [x] Step 6: Admin interface (upload/manage documents)
-- [ ] Step 7: User interface (chatbot UI)
+- [x] Step 7: User interface (chatbot UI)
 - [ ] Step 8: Polish (citations, chat history, error handling)
 - [ ] Step 9: Deployment (Vercel + Render/Railway)
 

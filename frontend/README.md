@@ -30,7 +30,7 @@ chat interface is added in Step 7.
 
 | Route | Purpose |
 |---|---|
-| `/` | Landing page (placeholder until Step 7 adds the public chat UI) |
+| `/` | Public chat interface — anyone can ask questions, no login required |
 | `/login` | Sign in, or register a new account (admin accounts require the secret admin code set in the backend's `.env`) |
 | `/admin` | Document catalog — upload, view status, and delete PDFs. Admin accounts only; redirects to `/login` otherwise. |
 
