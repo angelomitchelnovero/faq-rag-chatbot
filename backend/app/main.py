@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.routers import health, documents
+from app.routers import health, documents, chat
 
 app = FastAPI(
     title="FAQ RAG Chatbot API",
@@ -47,3 +47,4 @@ def read_root():
 # Routers
 app.include_router(health.router)
 app.include_router(documents.router)
+app.include_router(chat.router)

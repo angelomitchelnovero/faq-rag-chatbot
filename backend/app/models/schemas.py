@@ -18,3 +18,18 @@ class DocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True  # allows creating this from a SQLAlchemy object directly
+
+
+class ChatRequest(BaseModel):
+    question: str
+
+
+class SourceChunk(BaseModel):
+    filename: str
+    text: str
+    distance: float
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[SourceChunk]
