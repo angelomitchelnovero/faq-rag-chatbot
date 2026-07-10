@@ -33,6 +33,6 @@ def get_db():
 def init_db():
     """Create all tables. Called once at app startup."""
     # Import models here so they're registered on Base before create_all runs
-    from app.models import document  # noqa: F401
+    from app.models import document, user  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

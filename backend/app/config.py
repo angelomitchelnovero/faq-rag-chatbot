@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24  # 24 hours
 
+    # Secret code required to register as an admin (prevents open admin signup)
+    admin_signup_code: str = "change-this-admin-code"
+
     # Database
     database_url: str = "sqlite:///./data/app.db"
 

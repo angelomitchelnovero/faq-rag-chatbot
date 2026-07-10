@@ -13,8 +13,10 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.dependencies import require_admin
 from app.models.document import Document
 from app.models.schemas import DocumentResponse
+from app.models.user import User
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunking import chunk_text
 from app.services import vector_store
@@ -25,7 +27,11 @@ ALLOWED_EXTENSIONS = {".pdf"}
 
 
 @router.post("/upload", response_model=DocumentResponse)
-def upload_document(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def upload_document(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Only PDF files are supported right now.")
@@ -66,12 +72,16 @@ def upload_document(file: UploadFile = File(...), db: Session = Depends(get_db))
 
 
 @router.get("", response_model=list[DocumentResponse])
-def list_documents(db: Session = Depends(get_db)):
+def list_documents(db: Session = Depends(get_db), _admin: User = Depends(require_admin)):
     return db.query(Document).order_by(Document.uploaded_at.desc()).all()
 
 
 @router.delete("/{document_id}")
-def delete_document(document_id: str, db: Session = Depends(get_db)):
+def delete_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
