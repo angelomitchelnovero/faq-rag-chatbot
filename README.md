@@ -57,7 +57,7 @@ faq-rag-chatbot/
 - [x] Step 5: Auth system (JWT, admin/user roles)
 - [x] Step 6: Admin interface (upload/manage documents)
 - [x] Step 7: User interface (chatbot UI)
-- [ ] Step 8: Polish (citations, chat history, error handling)
+- [x] Step 8: Polish (citations, chat history, error handling)
 - [ ] Step 9: Deployment (Vercel + Render/Railway)
 
 ## Getting Started (local dev)

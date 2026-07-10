@@ -13,11 +13,42 @@ const SUGGESTED_QUESTIONS = [
   "Do you offer refunds?",
 ];
 
+const HISTORY_KEY = "chat_history";
+
+function errorMessageFor(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 400) return err.message; // e.g. missing Gemini key, empty question
+    if (err.status === 502) return "The assistant is temporarily unavailable. Please try again in a moment.";
+    if (err.status >= 500) return "Something went wrong on our end. Please try again.";
+    return err.message;
+  }
+  // Not an ApiError at all -> the request never reached the server
+  return "Can't reach the server right now. Check your connection and try again.";
+}
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Load saved history once, on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(HISTORY_KEY);
+      if (saved) setMessages(JSON.parse(saved));
+    } catch {
+      // corrupted/old data shape - ignore and start fresh
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist history whenever it changes (after initial load, to avoid overwriting with [])
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(messages));
+  }, [messages, hydrated]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,13 +69,9 @@ export default function ChatPage() {
         { role: "assistant", content: res.answer, sources: res.sources },
       ]);
     } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? err.message
-          : "Something went wrong reaching the assistant. Please try again.";
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: message, isError: true },
+        { role: "assistant", content: errorMessageFor(err), isError: true },
       ]);
     } finally {
       setLoading(false);
@@ -54,6 +81,11 @@ export default function ChatPage() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     sendMessage(input);
+  }
+
+  function clearConversation() {
+    setMessages([]);
+    localStorage.removeItem(HISTORY_KEY);
   }
 
   return (
@@ -69,18 +101,28 @@ export default function ChatPage() {
               ASK ANYTHING
             </span>
           </div>
-          <Link
-            href="/login"
-            className="focus-ring font-mono text-[11px] tracking-wider text-[var(--color-muted)] hover:text-[var(--color-signal)]"
-          >
-            ADMIN →
-          </Link>
+          <div className="flex items-center gap-4">
+            {messages.length > 0 && (
+              <button
+                onClick={clearConversation}
+                className="focus-ring font-mono text-[11px] tracking-wider text-[var(--color-muted)] hover:text-[var(--color-text)]"
+              >
+                NEW CHAT
+              </button>
+            )}
+            <Link
+              href="/login"
+              className="focus-ring font-mono text-[11px] tracking-wider text-[var(--color-muted)] hover:text-[var(--color-signal)]"
+            >
+              ADMIN →
+            </Link>
+          </div>
         </div>
       </header>
 
       {/* Message list */}
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-8">
-        {messages.length === 0 ? (
+        {!hydrated ? null : messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
             <div>
               <p className="font-mono text-[11px] tracking-widest text-[var(--color-signal)]">

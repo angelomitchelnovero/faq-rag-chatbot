@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadDocuments = useCallback(async () => {
@@ -27,10 +28,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadDocuments();
-    // Poll every 4s so "processing" documents flip to "ready" without a manual refresh
-    const interval = setInterval(loadDocuments, 4000);
-    return () => clearInterval(interval);
   }, [loadDocuments]);
+
+  // Only poll while something is actively being indexed - no need to hammer
+  // the API once everything has settled into "ready" or "failed".
+  const hasProcessing = documents.some((d) => d.status === "processing");
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const interval = setInterval(loadDocuments, 3000);
+    return () => clearInterval(interval);
+  }, [hasProcessing, loadDocuments]);
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -56,11 +63,15 @@ export default function AdminDashboard() {
     if (!confirm(`Remove "${doc.filename}" from the index? This cannot be undone.`)) {
       return;
     }
+    setDeletingId(doc.id);
+    setError(null);
     try {
       await api.deleteDocument(doc.id);
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -139,7 +150,12 @@ export default function AdminDashboard() {
       ) : (
         <ul className="flex flex-col gap-2.5">
           {documents.map((doc) => (
-            <DocumentRow key={doc.id} doc={doc} onDelete={() => handleDelete(doc)} />
+            <DocumentRow
+              key={doc.id}
+              doc={doc}
+              onDelete={() => handleDelete(doc)}
+              isDeleting={deletingId === doc.id}
+            />
           ))}
         </ul>
       )}
@@ -156,7 +172,15 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function DocumentRow({ doc, onDelete }: { doc: Document; onDelete: () => void }) {
+function DocumentRow({
+  doc,
+  onDelete,
+  isDeleting,
+}: {
+  doc: Document;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
   const stripeColor =
     doc.status === "ready"
       ? "bg-[var(--color-ready)]"
@@ -165,7 +189,11 @@ function DocumentRow({ doc, onDelete }: { doc: Document; onDelete: () => void })
       : "bg-[var(--color-pending)]";
 
   return (
-    <li className="flex items-center gap-4 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+    <li
+      className={`flex items-center gap-4 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] transition ${
+        isDeleting ? "opacity-50" : ""
+      }`}
+    >
       <span className={`h-full w-1 self-stretch ${stripeColor}`} aria-hidden />
       <div className="flex flex-1 items-center justify-between gap-4 py-3.5 pr-4">
         <div className="min-w-0">
@@ -186,10 +214,11 @@ function DocumentRow({ doc, onDelete }: { doc: Document; onDelete: () => void })
           <StatusBadge status={doc.status} />
           <button
             onClick={onDelete}
-            className="focus-ring rounded-md px-2 py-1 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-danger)]"
+            disabled={isDeleting}
+            className="focus-ring rounded-md px-2 py-1 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-danger)] disabled:cursor-not-allowed"
             aria-label={`Remove ${doc.filename}`}
           >
-            Remove
+            {isDeleting ? "Removing…" : "Remove"}
           </button>
         </div>
       </div>
