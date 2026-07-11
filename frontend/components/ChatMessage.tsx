@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChatSource } from "@/lib/api";
+import { ChatSource, getDownloadUrl } from "@/lib/api";
 
 export interface Message {
   role: "user" | "assistant";
@@ -68,6 +68,15 @@ export default function ChatMessage({ message }: { message: Message }) {
                     <p className="mt-1 line-clamp-3 text-xs text-[var(--color-muted)]">
                       {s.text}
                     </p>
+                    {s.document_id && (
+                      <a
+                        href={getDownloadUrl(s.document_id)}
+                        download={s.filename}
+                        className="focus-ring mt-2 inline-flex items-center gap-1 font-mono text-[10px] tracking-wider text-[var(--color-signal)] hover:underline"
+                      >
+                        ↓ DOWNLOAD PDF
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

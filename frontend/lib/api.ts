@@ -82,6 +82,11 @@ export interface ChatSource {
   filename: string;
   text: string;
   distance: number;
+  document_id: string;
+}
+
+export function getDownloadUrl(documentId: string): string {
+  return `${API_URL}/documents/${documentId}/download`;
 }
 
 export interface ChatResponse {

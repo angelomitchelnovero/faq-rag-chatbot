@@ -1,14 +1,16 @@
 """
 Document management endpoints.
 
-POST   /documents/upload   - upload a PDF, extract text, chunk it, embed it, store in ChromaDB
-GET    /documents           - list all uploaded documents and their status
-DELETE /documents/{id}      - remove a document and its chunks from the vector store
+POST   /documents/upload             - upload a PDF, extract text, chunk it, embed it, store in ChromaDB
+GET    /documents                     - list all uploaded documents and their status
+DELETE /documents/{id}                - remove a document and its chunks from the vector store
+GET    /documents/{id}/download       - download the original PDF (public - linked from chat citations)
 """
 import os
 import uuid
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -97,3 +99,26 @@ def delete_document(
     db.delete(doc)
     db.commit()
     return {"status": "deleted", "id": document_id}
+
+
+@router.get("/{document_id}/download")
+def download_document(document_id: str, db: Session = Depends(get_db)):
+    """
+    Public endpoint - lets chat users download the original PDF behind a
+    source citation. Not admin-gated since chat answers already expose the
+    document's content; this just gives access to the underlying file.
+    """
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    for f in os.listdir(settings.upload_dir):
+        if f.startswith(document_id):
+            file_path = os.path.join(settings.upload_dir, f)
+            return FileResponse(
+                file_path,
+                media_type="application/pdf",
+                filename=doc.filename,  # browser will save it under the original name
+            )
+
+    raise HTTPException(status_code=404, detail="The original file is no longer available.")

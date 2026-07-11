@@ -49,7 +49,14 @@ def chat(request: ChatRequest):
     # this just avoids showing weak/unrelated matches to the user.)
     best_match = retrieved[0] if retrieved else None
     sources = (
-        [SourceChunk(filename=best_match["filename"], text=best_match["text"], distance=best_match["distance"])]
+        [
+            SourceChunk(
+                filename=best_match["filename"],
+                text=best_match["text"],
+                distance=best_match["distance"],
+                document_id=best_match["document_id"],
+            )
+        ]
         if best_match
         else []
     )

@@ -28,6 +28,7 @@ class SourceChunk(BaseModel):
     filename: str
     text: str
     distance: float
+    document_id: str
 
 
 class ChatResponse(BaseModel):
