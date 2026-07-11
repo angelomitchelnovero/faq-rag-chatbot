@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as api from "@/lib/api";
 import { ApiError, Document } from "@/lib/api";
 import StatusBadge from "@/components/StatusBadge";
+import EditDocumentModal from "@/components/EditDocumentModal";
 
 export default function AdminDashboard() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -12,6 +13,7 @@ export default function AdminDashboard() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingDoc, setEditingDoc] = useState<Document | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadDocuments = useCallback(async () => {
@@ -154,10 +156,21 @@ export default function AdminDashboard() {
               key={doc.id}
               doc={doc}
               onDelete={() => handleDelete(doc)}
+              onEdit={() => setEditingDoc(doc)}
               isDeleting={deletingId === doc.id}
             />
           ))}
         </ul>
+      )}
+
+      {editingDoc && (
+        <EditDocumentModal
+          doc={editingDoc}
+          onClose={() => setEditingDoc(null)}
+          onSaved={(updated) => {
+            setDocuments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+          }}
+        />
       )}
     </div>
   );
@@ -175,10 +188,12 @@ function Stat({ label, value }: { label: string; value: number }) {
 function DocumentRow({
   doc,
   onDelete,
+  onEdit,
   isDeleting,
 }: {
   doc: Document;
   onDelete: () => void;
+  onEdit: () => void;
   isDeleting: boolean;
 }) {
   const stripeColor =
@@ -212,6 +227,15 @@ function DocumentRow({
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <StatusBadge status={doc.status} />
+          {doc.status !== "processing" && (
+            <button
+              onClick={onEdit}
+              disabled={isDeleting}
+              className="focus-ring rounded-md px-2 py-1 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-signal)] disabled:cursor-not-allowed"
+            >
+              Edit
+            </button>
+          )}
           <button
             onClick={onDelete}
             disabled={isDeleting}

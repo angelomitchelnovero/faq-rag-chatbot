@@ -20,6 +20,14 @@ class DocumentResponse(BaseModel):
         from_attributes = True  # allows creating this from a SQLAlchemy object directly
 
 
+class RawTextResponse(BaseModel):
+    text: str
+
+
+class RawTextUpdate(BaseModel):
+    text: str
+
+
 class ChatRequest(BaseModel):
     question: str
 

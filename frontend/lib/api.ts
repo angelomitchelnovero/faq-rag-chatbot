@@ -143,6 +143,17 @@ export function deleteDocument(id: string) {
   });
 }
 
+export function getRawText(id: string) {
+  return request<{ text: string }>(`/documents/${id}/raw`);
+}
+
+export function updateRawText(id: string, text: string) {
+  return request<Document>(`/documents/${id}/raw`, {
+    method: "PUT",
+    body: JSON.stringify({ text }),
+  });
+}
+
 // ---- Chat (public) ----
 
 export function askQuestion(question: string) {

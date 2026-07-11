@@ -15,6 +15,7 @@ onnxruntime==1.19.2
 # --- PDF parsing ---
 pypdf==4.3.1
 pdfplumber==0.11.4
+reportlab==4.2.5
 
 # --- Gemini LLM ---
 # Note: google-generativeai was deprecated by Google (Nov 2025) in favor of
