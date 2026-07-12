@@ -1,20 +1,17 @@
 """
-Database setup (SQLite for local dev, swappable for Postgres/Supabase later).
+Database setup - Supabase Postgres.
 
-Tracks metadata about things stored in the app - documents, users, etc.
-The actual document TEXT and embeddings live in ChromaDB; this DB just
-tracks "what documents exist, when were they uploaded, how many chunks."
+Tracks metadata about things stored in the app - documents, users, and
+(via vector_store.DocumentChunk) the chunk embeddings themselves, using
+the pgvector extension. Everything lives in Postgres so there's a single
+source of truth shared between local dev and the deployed backend.
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.config import settings
 
-# check_same_thread=False is needed for SQLite + FastAPI's threaded request handling
-engine = create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {},
-)
+engine = create_engine(settings.database_url, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -31,8 +28,13 @@ def get_db():
 
 
 def init_db():
-    """Create all tables. Called once at app startup."""
+    """Enable pgvector and create all tables. Called once at app startup."""
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.commit()
+
     # Import models here so they're registered on Base before create_all runs
     from app.models import document, user  # noqa: F401
+    from app.services import vector_store  # noqa: F401 - registers DocumentChunk table
 
     Base.metadata.create_all(bind=engine)

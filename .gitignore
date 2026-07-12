@@ -10,13 +10,7 @@ env/
 .env
 *.env.local
 
-# ChromaDB / uploaded data (don't commit user data or vector db)
-backend/data/uploads/*
-backend/data/chroma_db/*
-!backend/data/uploads/.gitkeep
-!backend/data/chroma_db/.gitkeep
-
-# SQLite
+# SQLite (only used if you haven't switched DATABASE_URL to Postgres yet)
 *.db
 *.sqlite3
 

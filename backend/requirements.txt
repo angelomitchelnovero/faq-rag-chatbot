@@ -2,17 +2,25 @@
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 python-multipart==0.0.9
-pydantic==2.9.2
+pydantic>=2.11.7,<3.0.0
 pydantic-settings==2.5.2
 
 # --- RAG / Vector DB ---
-# Note: ChromaDB's default embedding function (all-MiniLM-L6-v2 via ONNX Runtime)
-# is used instead of sentence-transformers/PyTorch. Same embedding quality,
-# ~10x smaller install and much friendlier to free-tier hosting (Render/Railway).
-chromadb==0.5.15
-onnxruntime==1.19.2
+# Note: embeddings run locally via fastembed (ONNX, no PyTorch, no API
+# cost). Vectors are stored in Postgres via pgvector rather than a
+# separate local ChromaDB, so they persist through backend restarts on
+# hosts with ephemeral disk (e.g. Render's free tier).
+fastembed==0.8.0
+pgvector==0.5.0
 
-# --- PDF parsing ---
+# --- Database (Supabase Postgres) ---
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.12
+
+# --- File storage (Supabase Storage) ---
+supabase==2.31.0
+
+# --- PDF parsing/generation ---
 pypdf==4.3.1
 pdfplumber==0.11.4
 reportlab==4.2.5
@@ -25,9 +33,6 @@ google-genai==1.2.0
 # --- Auth ---
 python-jose[cryptography]==3.3.0
 bcrypt==4.2.0
-
-# --- Database (SQLite for now) ---
-sqlalchemy==2.0.35
 
 # --- Env config ---
 python-dotenv==1.0.1

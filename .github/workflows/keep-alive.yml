@@ -1,0 +1,31 @@
+name: Keep Supabase project awake
+
+# Supabase free-tier projects pause after 7 days with zero database
+# activity. This pings the backend's /health endpoint (which queries the
+# database) every 3 days, well within that window, so the project never
+# auto-pauses.
+#
+# Setup: add a repository variable named BACKEND_HEALTH_URL pointing at
+# your deployed backend's /health endpoint, e.g.
+#   https://your-backend.onrender.com/health
+# (Settings -> Secrets and variables -> Actions -> Variables tab)
+#
+# If that variable isn't set yet, this workflow just skips itself
+# instead of failing.
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *" # every 3 days at 06:00 UTC
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health endpoint
+        run: |
+          if [ -z "${{ vars.BACKEND_HEALTH_URL }}" ]; then
+            echo "BACKEND_HEALTH_URL repository variable is not set yet - skipping."
+            exit 0
+          fi
+          curl -sf "${{ vars.BACKEND_HEALTH_URL }}" || echo "Ping failed (backend may be cold-starting) - not treating as a failure."

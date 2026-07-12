@@ -7,7 +7,6 @@ Run locally with:
 Interactive docs available at:
     http://localhost:8000/docs
 """
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,9 +32,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
-    # Make sure the folders we depend on actually exist before anything tries to use them
-    os.makedirs(settings.upload_dir, exist_ok=True)
-    os.makedirs(settings.chroma_dir, exist_ok=True)
     init_db()
 
 
