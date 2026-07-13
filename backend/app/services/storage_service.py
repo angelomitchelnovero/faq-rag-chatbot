@@ -28,15 +28,18 @@ def _get_client() -> Client:
 
 def _ensure_bucket_exists(client: Client) -> None:
     """Create the storage bucket if it doesn't already exist. Safe to call repeatedly."""
+    existing = [b.name for b in client.storage.list_buckets()]
+    if settings.supabase_storage_bucket in existing:
+        return
     try:
-        existing = [b.name for b in client.storage.list_buckets()]
-        if settings.supabase_storage_bucket not in existing:
-            client.storage.create_bucket(settings.supabase_storage_bucket, options={"public": False})
-    except Exception:
-        # If this fails (e.g. already exists, or a race with another instance
-        # starting up at the same time), later calls will surface any real
-        # problem anyway - no need to hard-fail startup over this.
-        pass
+        client.storage.create_bucket(settings.supabase_storage_bucket, options={"public": False})
+    except Exception as e:
+        # Don't hide this - a failure here means every upload/download will
+        # fail too, and that failure is much harder to diagnose than this one.
+        if "already exists" not in str(e).lower():
+            raise RuntimeError(
+                f"Could not create Supabase Storage bucket '{settings.supabase_storage_bucket}': {e}"
+            ) from e
 
 
 def _pdf_key(document_id: str) -> str:
@@ -52,7 +55,11 @@ def upload_pdf(document_id: str, file_bytes: bytes) -> None:
     client.storage.from_(settings.supabase_storage_bucket).upload(
         _pdf_key(document_id),
         file_bytes,
-        file_options={"content-type": "application/pdf", "upsert": "true"},
+        # Note: these keys become literal HTTP headers - it's "x-upsert",
+        # not "upsert" (a wrong key here fails silently: the upload
+        # "succeeds" as a no-op on the first save, then every subsequent
+        # upload to the same key 409s instead of overwriting).
+        file_options={"content-type": "application/pdf", "x-upsert": "true"},
     )
 
 
@@ -69,7 +76,7 @@ def upload_raw_text(document_id: str, text: str) -> None:
     client.storage.from_(settings.supabase_storage_bucket).upload(
         _raw_text_key(document_id),
         text.encode("utf-8"),
-        file_options={"content-type": "text/plain; charset=utf-8", "upsert": "true"},
+        file_options={"content-type": "text/plain; charset=utf-8", "x-upsert": "true"},
     )
 
 

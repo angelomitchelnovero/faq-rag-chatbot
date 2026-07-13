@@ -15,7 +15,7 @@ matches in both places.
    (keep this secret - it's backend-only, never expose it to the frontend)
 
 That's it - the app automatically enables the `pgvector` extension and
-creates its tables/storage bucket the first time it starts up. 
+creates its tables/storage bucket the first time it starts up.
 
 ## Local Setup
 
